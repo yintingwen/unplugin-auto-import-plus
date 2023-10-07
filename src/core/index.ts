@@ -35,27 +35,27 @@ export default createUnplugin<Options>((options) => {
 
         const readDirFiles = fs.readdirSync(merge.inputDir)
         if (!readDirFiles.length) continue
-
+        
         readDirFiles.forEach((fileName) => mergeInsertExport(merge, dir, fileName))
         fs.writeFileSync(merge.outputFile, merge.exports.join('\n'))
       }
     },
-    // handleHotUpdate({ file }: { file: string }) {
-    //   file = path.normalize(file)
+    handleHotUpdate({ file }: { file: string }) {
+      file = path.normalize(file)
+      
+      for (const merge of mergeList) {
+        const fileSplit = path.normalize(file).split(path.sep)
+        const fileName = fileSplit.pop()?.split('.')[0] as string
+        const fileDir = fileSplit.join(path.sep)
+        const fileDirName = fileSplit.pop() as string
+        if (fileDir !== merge.inputDir) continue
 
-    //   for (const merge of mergeList) {
-    //     const fileSplit = path.normalize(file).split(path.sep)
-    //     const fileName = fileSplit.pop()?.split('.')[0] as string
-    //     const fileDir = fileSplit.join(path.sep)
-    //     const fileDirName = fileSplit.pop() as string
-    //     if (fileDir !== merge.inputDir) continue
+        const hasFile = merge.dependencies.some((item) => item === file)
+        if (hasFile) continue
 
-    //     const hasFile = merge.dependencies.some((item) => item === file)
-    //     if (hasFile) continue
-
-    //     mergeInsertExport(merge, fileDirName, fileName)
-    //     fs.writeFileSync(merge.outputFile, merge.exports.join('\n'))
-    //   }
-    // }
+        mergeInsertExport(merge, fileDirName, fileName)
+        fs.writeFileSync(merge.outputFile, merge.exports.join('\n'))
+      }
+    }
   }
 })
