@@ -1,19 +1,18 @@
 import fsp from 'fs/promises'
 import fs from 'fs'
 import fsExtra from 'fs-extra'
-import path, { dirname } from 'path'
-import { Merge, UseOptions, Options } from '../types'
+import path from 'path'
+import { Merge, MergeDirItem, Options, UseOptions } from '../types'
 
 export let plusOptions: UseOptions = {} as UseOptions
 
-
-export function mergeInsertExport(merge: Merge, sourceDirName: string, sourceFileName: string) {
+export function mergeInsertExport(mergeInfo: Merge, mergeDir: Required<MergeDirItem>, sourceFileName: string) {
   // 源文件的完整路径
-  const sourceFilePath = path.join(merge.inputDir, sourceFileName)
+  const sourceFilePath = path.join(mergeInfo.inputDir, sourceFileName)
   // 目标目录的完整路径
-  const targetFilePath = path.join(process.cwd(), plusOptions.mergeOutput, sourceFileName)
+  const targetFilePath = path.join(plusOptions.mergeOutput)
   // 先推入依赖
-  merge.dependencies.push(sourceFilePath)
+  mergeInfo.dependencies.push(sourceFilePath)
   // 进行切分为数组形式
   const sourceFilePathSplit = sourceFilePath.split(path.sep)
   const targetFilePathSplit = targetFilePath.split(path.sep)
@@ -22,13 +21,11 @@ export function mergeInsertExport(merge: Merge, sourceDirName: string, sourceFil
   // 去除相同部分
   sourceFilePathSplit.splice(0, diffIndex)
   targetFilePathSplit.splice(0, diffIndex)
-  // 去除最后的文件名
-  targetFilePathSplit.pop()
   // 拼接返回
   targetFilePathSplit.forEach(item => sourceFilePathSplit.unshift(`..`))
-  const exportName = normalizeFileName(sourceFileName.split('.')[0] + '-' + sourceDirName)
+  const exportName = normalizeFileName(sourceFileName.split('.')[0] + '-' + mergeDir.exportSuffix)
   const exportStr = `export * as  ${exportName} from '${sourceFilePathSplit.join('/')}'`
-  merge.exports.push(exportStr)
+  mergeInfo.exports.push(exportStr)
 }
 
 export function clearAndCreateAutoDir(dirPath: string) {
@@ -46,13 +43,13 @@ export function clearAndCreateAutoDir(dirPath: string) {
 export async function gitignoreAddAutoImport(mergeDir: string) {
   const gitignorePath = path.join(process.cwd(), '.gitignore')
   const dirName = mergeDir.split(path.sep).pop() as string
-  
+
   try {
     if (fs.existsSync(gitignorePath)) {
       const gitignoreContent = await fsp.readFile(gitignorePath, 'utf-8')
       const gitignoreContentLine = gitignoreContent.split('\n')
       if (gitignoreContentLine.includes(dirName)) return
-      fsp.appendFile(gitignorePath, gitignoreContentLine.length ?  `\n${dirName}` : dirName)
+      fsp.appendFile(gitignorePath, gitignoreContentLine.length ? `\n${dirName}` : dirName)
     } else {
       fsp.writeFile(gitignorePath, dirName)
     }
@@ -66,11 +63,13 @@ export async function gitignoreAddAutoImport(mergeDir: string) {
  * @param options plus的选项
  * @returns
  */
-export function normalizeOptions(options: Options): Required<Options> {
-  plusOptions = {
-    mergeDirs: options.mergeDirs ? options.mergeDirs.map(path.normalize) : [],
-    mergeOutput: options.mergeOutput ? path.normalize(options.mergeOutput) : path.join(process.cwd(), 'src', 'export-merge')
-  }
+export function normalizeOptions(options: Options): UseOptions {
+  if (!options.mergeDirs) options.mergeDirs = []
+  plusOptions.mergeDirs = options.mergeDirs.map(normalizeMergeDirItem)
+
+  if (!options.mergeOutput) options.mergeOutput = 'src\\export-merge'
+  plusOptions.mergeOutput = path.join(process.cwd(), path.normalize(options.mergeOutput))
+  
   return plusOptions
 }
 
@@ -82,4 +81,15 @@ export function normalizeFileName(fileName: string) {
       return item.slice(0, 1).toUpperCase() + item.slice(1)
     })
     .join('')
+}
+
+export function normalizeMergeDirItem(dir: string | MergeDirItem): Required<MergeDirItem> {
+  if (typeof dir === 'string') dir = { input: dir }
+  const dirName = path.normalize(dir.input).split(path.sep).pop() as string
+
+  dir.input = path.join(process.cwd(), dir.input)
+  dir.exportFileName = dir.exportFileName || dirName
+  dir.exportSuffix =  dir.exportSuffix || dirName
+
+  return dir as Required<MergeDirItem>
 }
