@@ -1,7 +1,7 @@
 import fsp from 'fs/promises'
 import fs from 'fs'
 import fsExtra from 'fs-extra'
-import path from 'path'
+import path, { dirname } from 'path'
 import { Merge, UseOptions, Options } from '../types'
 
 export let plusOptions: UseOptions = {} as UseOptions
@@ -52,13 +52,12 @@ export async function gitignoreAddAutoImport(mergeDir: string) {
       const gitignoreContent = await fsp.readFile(gitignorePath, 'utf-8')
       const gitignoreContentLine = gitignoreContent.split('\n')
       if (gitignoreContentLine.includes(dirName)) return
-      fsp.appendFile(gitignorePath, dirName)
+      fsp.appendFile(gitignorePath, gitignoreContentLine.length ?  `\n${dirName}` : dirName)
     } else {
       fsp.writeFile(gitignorePath, dirName)
     }
   } catch (error) {
     console.log(error);
-
   }
 }
 
