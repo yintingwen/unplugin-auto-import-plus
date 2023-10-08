@@ -1,5 +1,5 @@
 import { createUnplugin } from 'unplugin'
-import { Merge, Options, UseOptions } from '../types'
+import { Merge, Options } from '../types'
 import { mergeInsertExport, clearAndCreateAutoDir, gitignoreAddAutoImport, normalizeOptions } from './helper'
 import path from 'path'
 import fs from 'fs'
@@ -7,7 +7,7 @@ import fs from 'fs'
 const mergeList: Merge[] = []
 
 export let mergeOutputDir: string = ''
-export let useOptions: UseOptions = {} as UseOptions
+export let useOptions: Required<Options> = {} as Required<Options>
 
 export default createUnplugin<Options>((options) => {
   useOptions = normalizeOptions(options)
@@ -24,9 +24,11 @@ export default createUnplugin<Options>((options) => {
       if (!mergeDirs.length) return
       
       for (const dir of mergeDirs) {
+        const outputFileName = path.normalize(dir).split(path.sep).pop() as string
+        
         const merge: Merge = {
           inputDir: path.join(process.cwd(), dir),
-          outputFile: path.join(mergeOutput, `${dir}.js`),
+          outputFile: path.join(mergeOutput, `${outputFileName}.js`),
           dependencies: [],
           exports: [],
         }
@@ -36,7 +38,7 @@ export default createUnplugin<Options>((options) => {
         const readDirFiles = fs.readdirSync(merge.inputDir)
         if (!readDirFiles.length) continue
         
-        readDirFiles.forEach((fileName) => mergeInsertExport(merge, dir, fileName))
+        readDirFiles.forEach((fileName) => mergeInsertExport(merge, outputFileName, fileName))
         fs.writeFileSync(merge.outputFile, merge.exports.join('\n'))
       }
     },

@@ -46,16 +46,15 @@ export function clearAndCreateAutoDir(dirPath: string) {
 export async function gitignoreAddAutoImport(mergeDir: string) {
   const gitignorePath = path.join(process.cwd(), '.gitignore')
   const dirName = mergeDir.split(path.sep).pop() as string
-
+  
   try {
     if (fs.existsSync(gitignorePath)) {
       const gitignoreContent = await fsp.readFile(gitignorePath, 'utf-8')
-      if (!gitignoreContent) return
       const gitignoreContentLine = gitignoreContent.split('\n')
       if (gitignoreContentLine.includes(dirName)) return
-      fs.appendFileSync(gitignorePath, `\n${dirName}`)
+      fsp.appendFile(gitignorePath, dirName)
     } else {
-      fs.writeFile(gitignorePath, dirName, () => { })
+      fsp.writeFile(gitignorePath, dirName)
     }
   } catch (error) {
     console.log(error);
@@ -68,7 +67,7 @@ export async function gitignoreAddAutoImport(mergeDir: string) {
  * @param options plus的选项
  * @returns
  */
-export function normalizeOptions(options: Options): UseOptions {
+export function normalizeOptions(options: Options): Required<Options> {
   plusOptions = {
     mergeDirs: options.mergeDirs ? options.mergeDirs.map(path.normalize) : [],
     mergeOutput: options.mergeOutput ? path.normalize(options.mergeOutput) : path.join(process.cwd(), 'src', 'export-merge')
