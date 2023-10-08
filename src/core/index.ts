@@ -1,6 +1,6 @@
 import { createUnplugin } from 'unplugin'
-import { Merge, MergeDirItem, Options, UseOptions } from '../types'
-import { mergeInsertExport, clearAndCreateAutoDir, gitignoreAddAutoImport, normalizeOptions, normalizeMergeDirItem } from './helper'
+import { Merge, Options } from '../types'
+import { mergeInsertExport, clearAndCreateAutoDir, gitignoreAddAutoImport, normalizeOptions } from './helper'
 import path from 'path'
 import fs from 'fs'
 
@@ -28,6 +28,7 @@ export default createUnplugin<Options>((options) => {
           outputFile: path.join(mergeOutput, `${dir.exportFileName}.js`),
           dependencies: [],
           exports: [],
+          exportSuffix: dir.exportSuffix
         }
 
         mergeList.push(merge)
@@ -36,7 +37,7 @@ export default createUnplugin<Options>((options) => {
         const readDirFiles = fs.readdirSync(merge.inputDir)
         if (!readDirFiles.length) continue
 
-        readDirFiles.forEach((fileName) => mergeInsertExport(merge, dir, fileName))
+        readDirFiles.forEach((fileName) => mergeInsertExport(merge, fileName))
         fs.writeFileSync(merge.outputFile, merge.exports.join('\n'))
       }
     },
@@ -44,16 +45,19 @@ export default createUnplugin<Options>((options) => {
       file = path.normalize(file)
 
       for (const merge of mergeList) {
+        // 路径切片
         const fileSplit = path.normalize(file).split(path.sep)
+        // 变动的文件名
         const fileName = fileSplit.pop()?.split('.')[0] as string
+        // 变动的目录路径
         const fileDir = fileSplit.join(path.sep)
-        const fileDirName = fileSplit.pop() as string
+        // 判断变动的目录是否相同
         if (fileDir !== merge.inputDir) continue
-
+        // 判断是否是已经存在的目录，存在就不处理
         const hasFile = merge.dependencies.some((item) => item === file)
         if (hasFile) continue
-
-        mergeInsertExport(merge, fileDirName, fileName)
+        // 不存在就写入
+        mergeInsertExport(merge, fileName)
         fs.writeFileSync(merge.outputFile, merge.exports.join('\n'))
       }
     }

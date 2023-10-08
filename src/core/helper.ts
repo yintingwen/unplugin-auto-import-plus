@@ -6,7 +6,7 @@ import { Merge, MergeDirItem, Options, UseOptions } from '../types'
 
 export let plusOptions: UseOptions = {} as UseOptions
 
-export function mergeInsertExport(mergeInfo: Merge, mergeDir: Required<MergeDirItem>, sourceFileName: string) {
+export function mergeInsertExport(mergeInfo: Merge, sourceFileName: string) {
   // 源文件的完整路径
   const sourceFilePath = path.join(mergeInfo.inputDir, sourceFileName)
   // 目标目录的完整路径
@@ -23,7 +23,7 @@ export function mergeInsertExport(mergeInfo: Merge, mergeDir: Required<MergeDirI
   targetFilePathSplit.splice(0, diffIndex)
   // 拼接返回
   targetFilePathSplit.forEach(item => sourceFilePathSplit.unshift(`..`))
-  const exportName = normalizeFileName(sourceFileName.split('.')[0] + '-' + mergeDir.exportSuffix)
+  const exportName = normalizeFileName(sourceFileName.split('.')[0] + '-' + mergeInfo.exportSuffix)
   const exportStr = `export * as  ${exportName} from '${sourceFilePathSplit.join('/')}'`
   mergeInfo.exports.push(exportStr)
 }

@@ -18,6 +18,10 @@ export interface MergeDirItem {
 export interface Merge {
   inputDir: string,
   outputFile: string,
+  // 依赖的文件路径
   dependencies: string[],
+  // 导出字符串
   exports: string[],
+  // 导出后缀
+  exportSuffix?: string;
 }
