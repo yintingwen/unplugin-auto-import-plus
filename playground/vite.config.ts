@@ -6,10 +6,10 @@ export default defineConfig({
   plugins: [
     Inspect(),
     Unplugin({
-      mergeDirs: [
-        { input: './src/test', exportSuffix: 'util' }
+      dirs: [
+        { input: './src/test', suffix: 'util' }
       ],
-      mergeOutput: './src/merge'
+      output: './src/merge'
     }),
   ],
 })

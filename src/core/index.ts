@@ -10,25 +10,25 @@ export let mergeOutputDir: string = ''
 
 export default createUnplugin<Options>((options) => {
   const pluginOptions = normalizeOptions(options)
-  const { mergeDirs, mergeOutput } = pluginOptions
+  const { dirs, output } = pluginOptions
 
   return {
     name: 'export-merge',
     options() {
       // 清除输出目录
-      clearAndCreateAutoDir(mergeOutput)
+      clearAndCreateAutoDir(output)
       // 添加gitignore排除
-      gitignoreAddAutoImport(mergeOutput)
+      gitignoreAddAutoImport(output)
 
-      if (!mergeDirs.length) return
+      if (!dirs.length) return
 
-      for (const dir of mergeDirs) {
+      for (const dir of dirs) {
         const merge: Merge = {
           inputDir: dir.input,
-          outputFile: path.join(mergeOutput, `${dir.exportFileName}.js`),
+          outputFile: path.join(output, `${dir.fileName}.js`),
           dependencies: [],
           exports: [],
-          exportSuffix: dir.exportSuffix
+          exportSuffix: dir.suffix
         }
 
         mergeList.push(merge)

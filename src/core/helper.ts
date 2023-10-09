@@ -10,7 +10,7 @@ export function mergeInsertExport(mergeInfo: Merge, sourceFileName: string) {
   // 源文件的完整路径
   const sourceFilePath = path.join(mergeInfo.inputDir, sourceFileName)
   // 目标目录的完整路径
-  const targetFilePath = path.join(plusOptions.mergeOutput)
+  const targetFilePath = path.join(plusOptions.output)
   // 先推入依赖
   mergeInfo.dependencies.push(sourceFilePath)
   // 进行切分为数组形式
@@ -64,11 +64,11 @@ export async function gitignoreAddAutoImport(mergeDir: string) {
  * @returns
  */
 export function normalizeOptions(options: Options): UseOptions {
-  if (!options.mergeDirs) options.mergeDirs = []
-  plusOptions.mergeDirs = options.mergeDirs.map(normalizeMergeDirItem)
+  if (!options.dirs) options.dirs = []
+  plusOptions.dirs = options.dirs.map(normalizeMergeDirItem)
 
-  if (!options.mergeOutput) options.mergeOutput = 'src\\export-merge'
-  plusOptions.mergeOutput = path.join(process.cwd(), path.normalize(options.mergeOutput))
+  if (!options.output) options.output = 'src\\export-merge'
+  plusOptions.output = path.join(process.cwd(), path.normalize(options.output))
   
   return plusOptions
 }
@@ -88,8 +88,8 @@ export function normalizeMergeDirItem(dir: string | MergeDirItem): Required<Merg
   const dirName = path.normalize(dir.input).split(path.sep).pop() as string
 
   dir.input = path.join(process.cwd(), dir.input)
-  dir.exportFileName = dir.exportFileName || dirName
-  dir.exportSuffix =  dir.exportSuffix || dirName
+  dir.fileName = dir.fileName || dirName
+  dir.suffix =  dir.suffix || dirName
 
   return dir as Required<MergeDirItem>
 }

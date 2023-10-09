@@ -1,18 +1,18 @@
 export interface Options {
   // 聚合的目录
-  mergeDirs?: Array<string | MergeDirItem>;
+  dirs?: Array<string | MergeDirItem>;
   // 聚合的输出目录
-  mergeOutput?: string;
+  output?: string;
 }
 
 export interface UseOptions extends Required<Options> {
-  mergeDirs: Required<MergeDirItem>[];
+  dirs: Required<MergeDirItem>[];
 }
 
 export interface MergeDirItem {
   input: string;
-  exportSuffix?: string;
-  exportFileName?: string;
+  suffix?: string;
+  fileName?: string;
 }
 
 export interface Merge {
