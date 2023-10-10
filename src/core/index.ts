@@ -40,26 +40,26 @@ export default createUnplugin<Options>((options) => {
         readDirFiles.forEach((fileName) => mergeInsertExport(merge, fileName))
         fs.writeFileSync(merge.outputFile, merge.exports.join('\n'))
       }
-    },
-    handleHotUpdate({ file }: { file: string }) {
-      file = path.normalize(file)
-
-      for (const merge of mergeList) {
-        // 路径切片
-        const fileSplit = path.normalize(file).split(path.sep)
-        // 变动的文件名
-        const fileName = fileSplit.pop()?.split('.')[0] as string
-        // 变动的目录路径
-        const fileDir = fileSplit.join(path.sep)
-        // 判断变动的目录是否相同
-        if (fileDir !== merge.inputDir) continue
-        // 判断是否是已经存在的目录，存在就不处理
-        const hasFile = merge.dependencies.some((item) => item === file)
-        if (hasFile) continue
-        // 不存在就写入
-        mergeInsertExport(merge, fileName)
-        fs.writeFileSync(merge.outputFile, merge.exports.join('\n'))
-      }
     }
+    // handleHotUpdate({ file }: { file: string }) {
+    //   file = path.normalize(file)
+
+    //   for (const merge of mergeList) {
+    //     // 路径切片
+    //     const fileSplit = path.normalize(file).split(path.sep)
+    //     // 变动的文件名
+    //     const fileName = fileSplit.pop()?.split('.')[0] as string
+    //     // 变动的目录路径
+    //     const fileDir = fileSplit.join(path.sep)
+    //     // 判断变动的目录是否相同
+    //     if (fileDir !== merge.inputDir) continue
+    //     // 判断是否是已经存在的目录，存在就不处理
+    //     const hasFile = merge.dependencies.some((item) => item === file)
+    //     if (hasFile) continue
+    //     // 不存在就写入
+    //     mergeInsertExport(merge, fileName)
+    //     fs.writeFileSync(merge.outputFile, merge.exports.join('\n'))
+    //   }
+    // }
   }
 })
