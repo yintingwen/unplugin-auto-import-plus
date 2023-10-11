@@ -14,7 +14,7 @@ export default createUnplugin<Options>((options) => {
 
   return {
     name: 'export-merge',
-    options() {
+    buildEnd() {      
       // 清除输出目录
       clearAndCreateAutoDir(output)
       // 添加gitignore排除
