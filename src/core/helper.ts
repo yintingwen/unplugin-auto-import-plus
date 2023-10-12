@@ -3,14 +3,13 @@ import fs from 'fs'
 import fsExtra from 'fs-extra'
 import path from 'path'
 import { Merge, MergeDirItem, Options, UseOptions } from '../types'
+import { async } from 'fast-glob'
 
 export let plusOptions: UseOptions = {} as UseOptions
 
-export function mergeInsertExport(mergeInfo: Merge, sourceFileName: string) {
-  // 源文件的完整路径
-  const sourceFilePath = path.join(mergeInfo.inputDir, sourceFileName)
+export function mergeInsertExport(mergeInfo: Merge, sourceFileName: string, sourceFilePath: string) {
   // 目标目录的完整路径
-  const targetFilePath = path.join(plusOptions.output)
+  const targetFilePath = plusOptions.output
   // 先推入依赖
   mergeInfo.dependencies.push(sourceFilePath)
   // 进行切分为数组形式
@@ -23,7 +22,24 @@ export function mergeInsertExport(mergeInfo: Merge, sourceFileName: string) {
   targetFilePathSplit.splice(0, diffIndex)
   // 拼接返回
   targetFilePathSplit.forEach(item => sourceFilePathSplit.unshift(`..`))
-  const exportName = normalizeFileName(sourceFileName.split('.')[0] + '-' + mergeInfo.exportSuffix)
+  const exportName = normalizeFileName(sourceFileName.split('.')[0] + '-' + mergeInfo.suffix)
+  const exportStr = `export * as  ${exportName} from '${sourceFilePathSplit.join('/')}'`
+  mergeInfo.exports.push(exportStr)
+}
+
+export function getExportString (mergeInfo: Merge, sourceFilePath: string, fileName: string): void {  
+  const targetFilePath = plusOptions.output
+  // 进行切分为数组形式
+  const sourceFilePathSplit = sourceFilePath.split(path.sep)
+  const targetFilePathSplit = targetFilePath.split(path.sep)
+  // 找出相同部分
+  const diffIndex = sourceFilePathSplit.findIndex((item, index) => targetFilePathSplit[index] !== item)
+  // 去除相同部分
+  sourceFilePathSplit.splice(0, diffIndex)
+  targetFilePathSplit.splice(0, diffIndex)
+  // 拼接返回
+  targetFilePathSplit.forEach(item => sourceFilePathSplit.unshift(`..`))
+  const exportName = normalizeFileName(fileName.split('.')[0] + '-' + 'js')
   const exportStr = `export * as  ${exportName} from '${sourceFilePathSplit.join('/')}'`
   mergeInfo.exports.push(exportStr)
 }
@@ -63,12 +79,19 @@ export async function gitignoreAddAutoImport(mergeDir: string) {
  * @param options plus的选项
  * @returns
  */
-export function normalizeOptions(options: Options): UseOptions {
+export async function normalizeOptions(options: Options): Promise<UseOptions> {
   if (!options.dirs) options.dirs = []
   plusOptions.dirs = options.dirs.map(normalizeMergeDirItem)
 
   if (!options.output) options.output = 'src\\export-merge'
   plusOptions.output = path.join(process.cwd(), path.normalize(options.output))
+  console.log('options.ts', options.ts);
+  
+  if (!options.ts) {
+    const files = await fsp.readdir(process.cwd())
+    options.ts = files.some((item) => item.split('.')[1] === 'ts' )
+  }
+  plusOptions.ts = options.ts
   
   return plusOptions
 }

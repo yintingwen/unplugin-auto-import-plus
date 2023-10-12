@@ -3,10 +3,13 @@ export interface Options {
   dirs?: Array<string | MergeDirItem>;
   // 聚合的输出目录
   output?: string;
+  // 语言类型
+  ts?: boolean;
 }
 
 export interface UseOptions extends Required<Options> {
   dirs: Required<MergeDirItem>[];
+  ts: boolean;
 }
 
 export interface MergeDirItem {
@@ -22,6 +25,6 @@ export interface Merge {
   dependencies: string[],
   // 导出字符串
   exports: string[],
-  // 导出后缀
-  exportSuffix?: string;
+  // 写入的内容
+  context: string
 }
