@@ -16,15 +16,12 @@ export default createUnplugin<Options>((options) => {
     async buildEnd() {
       const pluginOptions = await normalizeOptions(options)
       const { dirs, output, ts } = pluginOptions
-      
+
       // 清除输出目录
       clearAndCreateAutoDir(output)
       // 添加gitignore排除
       gitignoreAddAutoImport(output)
       if (!dirs.length) return
-      console.log('123');
-      
-      console.log('ts', ts);
 
       for (const dir of dirs) {
         // 创建merge
@@ -33,33 +30,27 @@ export default createUnplugin<Options>((options) => {
           outputFile: path.join(output, `${dir.fileName}.${ts ? 'ts' : 'js'}`),
           dependencies: [],
           exports: [],
+          exportSuffix: dir.suffix
         }
         // 推入列表
         mergeList.push(merge)
         // 判断输入目录是否存在
         if (!fs.existsSync(merge.inputDir)) continue
         // 读取目录下的文件
-        const readDirFiles = fs.readdirSync(merge.inputDir)
-        // 判断是否有文件
+        const readDirFiles = await fsp.readdir(merge.inputDir)
+        // 判断是否有文件，并获取导出字符串
         if (!readDirFiles.length) continue
-        readDirFiles.forEach(async (fileId) => {
-          // 文件名
-          const fileName = fileId.split('.')[0]
-          // 源文件路径
-          const sourceFilePath = path.join(merge.inputDir, fileName)
-          // 推入依赖数组
-          merge.dependencies.push(sourceFilePath)
-          // 获取旧的导出字符串
-          const hasOutputFile = await fsExtra.existsSync(merge.outputFile)
-          if (hasOutputFile) {
-            const oldExportStr = fsp.readFile(merge.outputFile)
-          } 
-          mergeInsertExport(merge, fileName, sourceFilePath)
-          const newExportStr = merge.exports.join('\n')
-          console.log(newExportStr);
-          
-        })
-        // fs.writeFileSync(merge.outputFile, merge.exports.join('\n'))
+        readDirFiles.forEach((fileId) => mergeInsertExport(merge, fileId))
+        // 新的聚合文件内容
+        const mergeFileContent = merge.exports.join('\n')
+
+        try {
+          await fsp.stat(merge.outputFile)
+          if (await fsp.readFile(merge.outputFile, 'utf-8') === mergeFileContent) return
+          fs.writeFileSync(merge.outputFile, mergeFileContent)
+        } catch (error) {
+          fs.writeFileSync(merge.outputFile, mergeFileContent)
+        }
       }
     }
     // handleHotUpdate({ file }: { file: string }) {

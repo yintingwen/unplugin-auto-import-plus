@@ -1,6 +1,9 @@
-# unplugin-starter
+# unplugin-export-merge
 
-Starter template for [unplugin](https://github.com/unjs/unplugin).
+ESM export 聚合导出插件，可以将文件中所有的export聚合在一起导出
+```javascript
+export * as mergeName from 'module'
+```
 
 ## Template Usage
 

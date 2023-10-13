@@ -25,6 +25,6 @@ export interface Merge {
   dependencies: string[],
   // 导出字符串
   exports: string[],
-  // 写入的内容
-  context: string
+  // 聚合导出名的后缀
+  exportSuffix: string;
 }

@@ -3,11 +3,14 @@ import fs from 'fs'
 import fsExtra from 'fs-extra'
 import path from 'path'
 import { Merge, MergeDirItem, Options, UseOptions } from '../types'
-import { async } from 'fast-glob'
 
 export let plusOptions: UseOptions = {} as UseOptions
 
-export function mergeInsertExport(mergeInfo: Merge, sourceFileName: string, sourceFilePath: string) {
+export function mergeInsertExport(mergeInfo: Merge, sourceFileId: string) {
+  // 源文件名
+  const sourceFileName = sourceFileId.split('.')[0]
+  // 源文件路径
+  const sourceFilePath = path.join(mergeInfo.inputDir, sourceFileId)
   // 目标目录的完整路径
   const targetFilePath = plusOptions.output
   // 先推入依赖
@@ -22,12 +25,12 @@ export function mergeInsertExport(mergeInfo: Merge, sourceFileName: string, sour
   targetFilePathSplit.splice(0, diffIndex)
   // 拼接返回
   targetFilePathSplit.forEach(item => sourceFilePathSplit.unshift(`..`))
-  const exportName = normalizeFileName(sourceFileName.split('.')[0] + '-' + mergeInfo.suffix)
+  const exportName = normalizeFileName(sourceFileName.split('.')[0] + '-' + mergeInfo.exportSuffix)
   const exportStr = `export * as  ${exportName} from '${sourceFilePathSplit.join('/')}'`
   mergeInfo.exports.push(exportStr)
 }
 
-export function getExportString (mergeInfo: Merge, sourceFilePath: string, fileName: string): void {  
+export function getExportString(mergeInfo: Merge, sourceFilePath: string, fileName: string): void {
   const targetFilePath = plusOptions.output
   // 进行切分为数组形式
   const sourceFilePathSplit = sourceFilePath.split(path.sep)
@@ -45,11 +48,8 @@ export function getExportString (mergeInfo: Merge, sourceFilePath: string, fileN
 }
 
 export function clearAndCreateAutoDir(dirPath: string) {
-  if (fs.existsSync(dirPath)) {
-    fsExtra.emptyDirSync(dirPath)
-  } else {
-    fsExtra.mkdirSync(dirPath)
-  }
+  if (fs.existsSync(dirPath)) return
+  fsExtra.mkdirSync(dirPath)
 }
 
 /**
@@ -86,13 +86,13 @@ export async function normalizeOptions(options: Options): Promise<UseOptions> {
   if (!options.output) options.output = 'src\\export-merge'
   plusOptions.output = path.join(process.cwd(), path.normalize(options.output))
   console.log('options.ts', options.ts);
-  
+
   if (!options.ts) {
     const files = await fsp.readdir(process.cwd())
-    options.ts = files.some((item) => item.split('.')[1] === 'ts' )
+    options.ts = files.some((item) => item.split('.')[1] === 'ts')
   }
   plusOptions.ts = options.ts
-  
+
   return plusOptions
 }
 
@@ -112,7 +112,7 @@ export function normalizeMergeDirItem(dir: string | MergeDirItem): Required<Merg
 
   dir.input = path.join(process.cwd(), dir.input)
   dir.fileName = dir.fileName || dirName
-  dir.suffix =  dir.suffix || dirName
+  dir.suffix = dir.suffix || dirName
 
   return dir as Required<MergeDirItem>
 }
