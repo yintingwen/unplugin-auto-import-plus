@@ -85,7 +85,6 @@ export async function normalizeOptions(options: Options): Promise<UseOptions> {
 
   if (!options.output) options.output = 'src\\export-merge'
   plusOptions.output = path.join(process.cwd(), path.normalize(options.output))
-  console.log('options.ts', options.ts);
 
   if (!options.ts) {
     const files = await fsp.readdir(process.cwd())

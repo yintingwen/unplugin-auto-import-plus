@@ -46,10 +46,11 @@ export default createUnplugin<Options>((options) => {
 
         try {
           await fsp.stat(merge.outputFile)
-          if (await fsp.readFile(merge.outputFile, 'utf-8') === mergeFileContent) return
-          fs.writeFileSync(merge.outputFile, mergeFileContent)
+          const oldMergeFileContent = await fsp.readFile(merge.outputFile, 'utf-8')
+          if (oldMergeFileContent === mergeFileContent) continue
+          fsp.writeFile(merge.outputFile, mergeFileContent)
         } catch (error) {
-          fs.writeFileSync(merge.outputFile, mergeFileContent)
+          fsp.writeFile(merge.outputFile, mergeFileContent)
         }
       }
     }
