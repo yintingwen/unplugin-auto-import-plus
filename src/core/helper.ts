@@ -79,15 +79,15 @@ export async function gitignoreAddAutoImport(mergeDir: string) {
  * @param options plus的选项
  * @returns
  */
-export async function normalizeOptions(options: Options): Promise<UseOptions> {
+export function normalizeOptions(options: Options): UseOptions {
   if (!options.dirs) options.dirs = []
   plusOptions.dirs = options.dirs.map(normalizeMergeDirItem)
 
-  if (!options.output) options.output = 'src\\export-merge'
+  if (!options.output) options.output = `src${path.sep}export-merge`
   plusOptions.output = path.join(process.cwd(), path.normalize(options.output))
 
   if (!options.ts) {
-    const files = await fsp.readdir(process.cwd())
+    const files = fs.readdirSync(process.cwd())
     options.ts = files.some((item) => item.split('.')[1] === 'ts')
   }
   plusOptions.ts = options.ts

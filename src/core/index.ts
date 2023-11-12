@@ -13,8 +13,8 @@ export let mergeOutputDir: string = ''
 export default createUnplugin<Options>((options) => {
   return {
     name: 'export-merge',
-    async buildEnd() {
-      const pluginOptions = await normalizeOptions(options)
+    buildStart() {
+      const pluginOptions = normalizeOptions(options)
       const { dirs, output, ts } = pluginOptions
 
       // 清除输出目录
@@ -37,7 +37,7 @@ export default createUnplugin<Options>((options) => {
         // 判断输入目录是否存在
         if (!fs.existsSync(merge.inputDir)) continue
         // 读取目录下的文件
-        const readDirFiles = await fsp.readdir(merge.inputDir)
+        const readDirFiles = fs.readdirSync(merge.inputDir)
         // 判断是否有文件，并获取导出字符串
         if (!readDirFiles.length) continue
         readDirFiles.forEach((fileId) => mergeInsertExport(merge, fileId))
@@ -45,8 +45,8 @@ export default createUnplugin<Options>((options) => {
         const mergeFileContent = merge.exports.join('\n')
 
         try {
-          await fsp.stat(merge.outputFile)
-          const oldMergeFileContent = await fsp.readFile(merge.outputFile, 'utf-8')
+          fs.statSync(merge.outputFile)
+          const oldMergeFileContent = fs.readFileSync(merge.outputFile, 'utf-8')
           if (oldMergeFileContent === mergeFileContent) continue
           fsp.writeFile(merge.outputFile, mergeFileContent)
         } catch (error) {
